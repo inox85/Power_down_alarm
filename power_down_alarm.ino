@@ -49,6 +49,8 @@ void setup() {
 
   Serial.begin(115200);
 
+  for(int i = 0; i < ARRAY_LENGHT; i++) averageArray[i] = 0;
+  
   pinMode(buzzer, OUTPUT);
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
@@ -81,6 +83,7 @@ void setup() {
   display.display();
 
   delay(1500);
+  
 }
 
 void loop() {
@@ -91,7 +94,7 @@ void loop() {
 
   instantPower = math_round((Irms * VOLTS / 1000.0),2);
 
-  averageArray[getCurrentIndex()] = instantPower;
+  addToArray(instantPower);
 
   float sum = 0;
   for(int index = 0; index < ARRAY_LENGHT; index++) sum += averageArray[index];
@@ -101,53 +104,18 @@ void loop() {
     avg_state = 1;
   }
 
+    display.setTextSize(2);
+    display.setCursor(0, 0);
+    display.print(instantPower);
+    display.setCursor(0, 30);
+    display.print(averagePower);
+    display.setCursor(52, 30);
+    display.print("kW");
+    display.setTextSize(1);
+    display.setCursor(77, 37);
+    display.print("AVG");
 
-//  if (minuti == 2) {  // controllo dopo 2 minuti
-//    if (kW_avg < MAX_PEAK_POWER) {
-//      avg_state = 0;
-//      clock_timer = 0;
-//      minuti = 0;
-//    }
-//  }
-//
-//  else if (minuti == 92) {    // controllo dopo 92 minuti
-//    if (kW_avg < MAX_PEAK_POWER) {
-//      avg_state = 0;
-//      clock_timer = 0;
-//      minuti = 0;
-//    }
-//  }
-//
-//  else if (minuti >= 180) {    // controllo dopo 180 minuti, a 182 minuti il contatore stacca
-//    if (kW_avg > MAX_PEAK_POWER) {
-//      on_buzzer = 1;
-//    }
-//    else {
-//      avg_state = 0;
-//      clock_timer = 0;
-//      minuti = 0;
-//      on_buzzer = 0;
-//    }
-//  }
-//
-//  if (avg_state) {
-//
-//    update_clock();
-//    samples++;
-//    sum_kW += kW;
-//    kW_avg = math_round(sum_kW / samples, 2);
-//
-//    if (kW_avg > MAX_PEAK_POWER) on_led = 1;
-//    else on_led = 0;
-//
-//    display.setTextSize(2);
-//    display.setCursor(0, 30);
-//    display.print(kW_avg);
-//    display.setCursor(52, 30);
-//    display.print("kW");
-//    display.setTextSize(1);
-//    display.setCursor(77, 37);
-//    display.print("AVG");
+    
 //  }
 //
 //  else {
@@ -204,9 +172,8 @@ void loop() {
 
 }
 
-int getCurrentIndex()
+void addToArray(float value)
 {
-  if(CURRENT_INDEX < ARRAY_LENGHT) CURRENT_INDEX++;
-  else CURRENT_INDEX = 0;
-  return CURRENT_INDEX;
+    for(int i = 0; i < ARRAY_LENGHT - 1; i++) averageArray[i] = averageArray[i + 1];
+    averageArray[ARRAY_LENGHT - 1] = value;
 }
