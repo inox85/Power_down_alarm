@@ -11,8 +11,8 @@
 
 #define relay1 12
 #define relay2 13
-#define buzzer 14
-#define current_pin A0
+#define BUZZER_PIN 14
+#define CURRENT_PIN A0
 #define flash_button 0
 
 #define ARRAY_LENGHT 3600
@@ -28,22 +28,8 @@ const float MAX_PEAK_POWER = 4.0;
 const float MAX_AVERAGE_POWER = 3.3;
 int CURRENT_INDEX = 0;
 
-int state;
-unsigned int current_millis;
-unsigned int current_millis_set;
+bool LED_STATE = false;
 
-bool avg_state = 0;
-
-bool on_buzzer = 0;
-bool beep = 0;
-bool on_led = 0;
-
-unsigned int clock_timer;
-unsigned int minuti;
-unsigned int ore;
-
-unsigned long samples;
-int wait = 0;
 
 void setup() {
 
@@ -51,7 +37,7 @@ void setup() {
 
   for(int i = 0; i < ARRAY_LENGHT; i++) averageArray[i] = 0;
   
-  pinMode(buzzer, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
   pinMode(relay1, OUTPUT);
   pinMode(relay2, OUTPUT);
   pinMode(flash_button, INPUT);
@@ -101,7 +87,14 @@ void loop() {
 
   if (instantPower > MAX_PEAK_POWER)
   {
-    avg_state = 1;
+    LED_STATE != LED_STATE;
+    digitalWrite(LED_BUILTIN,LED_STATE);
+    analogWriteFreq((int)(instantPower*500));
+    analogWrite(BUZZER_PIN, 512);
+  }else
+  {
+    digitalWrite(LED_BUILTIN,HIGH);
+    analogWrite(BUZZER_PIN, 0);
   }
 
     display.setTextSize(2);
