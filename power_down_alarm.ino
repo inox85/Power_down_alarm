@@ -9,6 +9,8 @@
 #define SCREEN_HEIGHT 64
 #define SCREEN_ADDRESS 0x3C
 
+#define GRAPH_HEIGHT 8
+
 #define relay1 12
 #define relay2 13
 #define BUZZER_PIN 14
@@ -20,6 +22,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire);
 
 float averageArray[ARRAY_LENGHT];
+float displaySamples[128];
 float VOLTS = 230.0;
 float instantPower = 0;
 float averagePower = 0;
@@ -27,6 +30,7 @@ float averagePower = 0;
 const float MAX_PEAK_POWER = 4.0;
 const float MAX_AVERAGE_POWER = 3.3;
 int CURRENT_INDEX = 0;
+
 
 bool LED_STATE = false;
 
@@ -36,6 +40,7 @@ void setup() {
   Serial.begin(115200);
 
   for(int i = 0; i < ARRAY_LENGHT; i++) averageArray[i] = 0;
+  for(int i = 0; i < 128; i++) displaySamples[i] = 0;
   
   pinMode(BUZZER_PIN, OUTPUT);
   pinMode(relay1, OUTPUT);
@@ -89,7 +94,7 @@ void loop() {
   {
     LED_STATE != LED_STATE;
     digitalWrite(LED_BUILTIN,LED_STATE);
-    analogWriteFreq((int)(instantPower*500));
+    analogWriteFreq((int)(instantPower*(float)500));
     analogWrite(BUZZER_PIN, 512);
   }else
   {
@@ -108,6 +113,10 @@ void loop() {
     display.setCursor(77, 37);
     display.print("AVG");
 
+    getDisplaySamples();
+
+    
+    
     
 //  }
 //
@@ -169,4 +178,25 @@ void addToArray(float value)
 {
     for(int i = 0; i < ARRAY_LENGHT - 1; i++) averageArray[i] = averageArray[i + 1];
     averageArray[ARRAY_LENGHT - 1] = value;
+}
+
+void getDisplaySamples()
+{
+  int initialIndex = 16;
+  float sum = 0;
+  for(int i = 0; i < 128; i++)
+  {
+    for(int c = 0; c < 28; c++)
+    {
+      sum += averageArray[initialIndex + (i*28) + c];
+      displaySamples[i] = sum/28;
+    }
+  }
+}
+
+void drawGraphAxis()
+{
+
+  display.drawLine(0, 63, 0, 127, SSD1306_WHITE);
+  display.drawLine(63-GRAPH_HEIGHT, 63, 0, 0, SSD1306_WHITE);
 }
