@@ -9,7 +9,7 @@
 #define SCREEN_HEIGHT 64
 #define SCREEN_ADDRESS 0x3C
 
-#define GRAPH_HEIGHT 8
+#define GRAPH_HEIGHT 33
 
 #define relay1 12
 #define relay2 13
@@ -27,7 +27,7 @@ float VOLTS = 230.0;
 float instantPower = 0;
 float averagePower = 0;
 
-const float MAX_PEAK_POWER = 4.0;
+const float MAX_PEAK_POWER = 3.6;
 const float MAX_AVERAGE_POWER = 3.3;
 int CURRENT_INDEX = 0;
 
@@ -73,7 +73,7 @@ void setup() {
   display.print("ALARM");
   display.display();
 
-  delay(1500);
+  delay(500);
   
 }
 
@@ -82,19 +82,20 @@ void loop() {
   display.clearDisplay();
 
   float Irms = measure_Irms();
+  
 
   instantPower = math_round((Irms * VOLTS / 1000.0),2);
-
+  //Serial.println(instantPower);
   addToArray(instantPower);
 
   float sum = 0;
   for(int index = 0; index < ARRAY_LENGHT; index++) sum += averageArray[index];
-
+  
   if (instantPower > MAX_PEAK_POWER)
   {
     LED_STATE != LED_STATE;
     digitalWrite(LED_BUILTIN,LED_STATE);
-    analogWriteFreq((int)(instantPower*(float)500));
+    analogWriteFreq((int)(instantPower*(float)200));
     analogWrite(BUZZER_PIN, 512);
   }else
   {
@@ -105,79 +106,39 @@ void loop() {
     display.setTextSize(2);
     display.setCursor(0, 0);
     display.print(instantPower);
-    display.setCursor(0, 30);
-    display.print(averagePower);
-    display.setCursor(52, 30);
+    display.setCursor(52, 0);
+    display.print("kW");
+    display.setCursor(0, 15);
+    display.print(getAverage());
+    display.setCursor(52, 15);
     display.print("kW");
     display.setTextSize(1);
-    display.setCursor(77, 37);
+    display.setCursor(77, 22);
     display.print("AVG");
 
+    drawGraphAxis();
+    
     getDisplaySamples();
 
-    
-    
-    
-//  }
-//
-//  else {
-//    current_millis = millis();
-//    samples = 0;
-//    on_led = 0;
-//    sum_kW = 0;
-//    kW_avg = 0;
-//  }
-//
-//  if (kW > LIMIT_POWER && minuti < 180) {
-//    wait++;
-//    if (wait > 10) {
-//      on_buzzer = 1;
-//      on_led = 1;
-//    }
-//  }
-//  else if (kW < LIMIT_POWER && minuti < 180) {
-//    on_buzzer = 0;
-//    wait = 0;
-//  }
-//
-//  if (kW < 0.05) {
-//    on_led = 0;
-//    on_buzzer = 0;
-//  }
-//
-//  if (on_led) {
-//    state = digitalRead(LED_BUILTIN);
-//    digitalWrite(LED_BUILTIN, !state);
-//  }
-//  else digitalWrite(LED_BUILTIN, HIGH);
-//
-//  if (on_buzzer && beep == 0) {
-//    analogWriteFreq(2800);
-//    analogWrite(buzzer, 512);
-//    beep = 1;
-//  }
-//  else if (on_buzzer && beep == 1) {
-//    analogWriteFreq(1100);
-//    analogWrite(buzzer, 512);
-//    beep = 0;
-//  }
-//  else analogWrite(buzzer, 0);
-//
-//
-//  display.setTextSize(3);
-//  display.setCursor(0, 0);
-//  display.print(kW);
-//  display.setCursor(80, 0);
-//  display.print("kW");
-//
-//  display.display();
+    getXAxisValue(instantPower);
 
+    drawGraph();
+    
+    display.display();
 }
 
 void addToArray(float value)
 {
     for(int i = 0; i < ARRAY_LENGHT - 1; i++) averageArray[i] = averageArray[i + 1];
     averageArray[ARRAY_LENGHT - 1] = value;
+}
+
+float getAverage()
+{
+    float sum = 0;
+    for(int i = 0; i < ARRAY_LENGHT; i++) sum += averageArray[i];
+    return sum/ARRAY_LENGHT;
+    
 }
 
 void getDisplaySamples()
@@ -197,6 +158,37 @@ void getDisplaySamples()
 void drawGraphAxis()
 {
 
-  display.drawLine(0, 63, 0, 127, SSD1306_WHITE);
-  display.drawLine(63-GRAPH_HEIGHT, 63, 0, 0, SSD1306_WHITE);
+  display.drawLine(0, 63-GRAPH_HEIGHT,0 ,63 ,SSD1306_WHITE);
+  display.drawLine(0, 63, 127, 63, SSD1306_WHITE);
+  
+  for(int i = 0; i < 128;i++)
+  {
+    if(i % 10 == 0)
+    {
+       display.drawPixel(i,getXAxisValue(1),SSD1306_WHITE);
+       display.drawPixel(i,getXAxisValue(2),SSD1306_WHITE);
+       display.drawPixel(i,getXAxisValue(3),SSD1306_WHITE);
+    }
+  }
+}
+
+int getXAxisValue(float power)
+{
+   int p = (int)(power*100);
+   int pixelValue = 63-map(p,0,330,0,GRAPH_HEIGHT);
+   Serial.print("X: ");
+   Serial.println(pixelValue);
+   
+   return pixelValue;
+ 
+}
+
+void drawGraph()
+{
+  for(int i = 0; i < 127; i++)
+  {
+    //display.drawPixel(127-i,getXAxisValue(averageArray[3599-i]),SSD1306_WHITE);
+    //display.drawLine(127-i,getXAxisValue(averageArray[3599-i]),127-i+1,getXAxisValue(averageArray[3599-i+1]),SSD1306_WHITE);
+    display.drawLine(126-i, getXAxisValue(averageArray[3598-i]), 127-i, getXAxisValue(averageArray[3599-i]), SSD1306_WHITE);
+  }
 }
