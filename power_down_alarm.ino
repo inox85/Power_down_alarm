@@ -117,8 +117,6 @@ void loop() {
     display.print("AVG");
 
     drawGraphAxis();
-    
-    getDisplaySamples();
 
     getXAxisValue(instantPower);
 
@@ -141,19 +139,7 @@ float getAverage()
     
 }
 
-void getDisplaySamples()
-{
-  int initialIndex = 16;
-  float sum = 0;
-  for(int i = 0; i < 128; i++)
-  {
-    for(int c = 0; c < 28; c++)
-    {
-      sum += averageArray[initialIndex + (i*28) + c];
-      displaySamples[i] = sum/28;
-    }
-  }
-}
+
 
 void drawGraphAxis()
 {
@@ -185,10 +171,26 @@ int getXAxisValue(float power)
 
 void drawGraph()
 {
+  int index = 0;
+  for(int i = 0; i < 128; i++)
+  { 
+    float sum = 0;
+    for(int c = 0; c < 28; c++)
+    {
+      index++;
+      sum += averageArray[index];
+    }
+    displaySamples[i]=sum/28;
+  }
+  
   for(int i = 0; i < 127; i++)
   {
-    //display.drawPixel(127-i,getXAxisValue(averageArray[3599-i]),SSD1306_WHITE);
-    //display.drawLine(127-i,getXAxisValue(averageArray[3599-i]),127-i+1,getXAxisValue(averageArray[3599-i+1]),SSD1306_WHITE);
-    display.drawLine(126-i, getXAxisValue(averageArray[3598-i]), 127-i, getXAxisValue(averageArray[3599-i]), SSD1306_WHITE);
+    display.drawLine(126-i, getXAxisValue(displaySamples[126-i]), 127-i, getXAxisValue(displaySamples[127-i]), SSD1306_WHITE);
   }
+  
+//  
+//  for(int i = 0; i < 127; i++)
+//  {
+//    display.drawLine(126-i, getXAxisValue(averageArray[3598-i]), 127-i, getXAxisValue(averageArray[3599-i]), SSD1306_WHITE);
+//  }
 }
